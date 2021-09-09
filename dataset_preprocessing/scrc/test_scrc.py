@@ -24,15 +24,25 @@ class test_scrc(unittest.TestCase):
         scrc_dir = pathlib.Path(scrc_dir)
         imgs_path = scrc_dir / 'scrc_wilds_img.pt'
         imgs = torch.load(str(imgs_path))
+        imgs = imgs[:, [1, 2, 3, 0]]
+        imgs[:, -1] = imgs[:, -1] / 10
         labs_path = scrc_dir / 'scrc_wilds_lab.pt'
         labs = torch.load(str(labs_path))
         lens = [0]
         for i in range(3):
             pt_path = scrc_dir / 'scrc_symm_circle_{}.pt'.format(i)
             img, lab = torch.load(str(pt_path))
+            # because of downscale the rgb value is rather a float 254.242 than 254.0
+            # lead to minor diff when call byte()
+            img = img[:, [0, 1, 2, 4]].byte()
+            ncls = img[:, -1]
+            ncls[(ncls == 3) | (ncls == 5)] = 0
+            img[:, -1] = ncls
+            lab = lab.float()
             img_part = imgs[lens[-1]: lens[-1] + lab.shape[0]]
             lab_part = labs[lens[-1]: lens[-1] + lab.shape[0]]
-            self.assertTrue(torch.all(img_part == img.float()))
+            # print(img_part)
+            self.assertTrue(torch.all(img_part == img))
             self.assertTrue(torch.all(lab_part == lab))
             lens.append(lens[-1] + lab.shape[0])
 
@@ -45,7 +55,8 @@ class test_scrc(unittest.TestCase):
 
             for index, row in df.iterrows():
                 self.assertTrue(pat_id[index] == row['pat_id'])
-                self.assertTrue(cms_vote[index, row['cms']] == cms_vote[index].max())
+                self.assertTrue(
+                    cms_vote[index, row['cms']] == cms_vote[index].max())
 
             trn = df.loc[df['dataset'] == 'train']
             self.assertEqual(set(np.unique(trn['tma_reg']).tolist()),
@@ -64,6 +75,7 @@ class test_scrc(unittest.TestCase):
             val_p = pat_id[val['tma_id']]
             pat, cnt = np.unique(val_p, return_counts=True)
             self.assertTrue(all(cnt == val_pat))
+
 
 def main(args):
     scrc = test_scrc(args.scrc_dir)

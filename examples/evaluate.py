@@ -38,7 +38,8 @@ def evaluate_all_benchmarks(predictions_dir: str, output_dir: str, root_dir: str
     for dataset in benchmark_datasets:
         try:
             all_results[dataset] = evaluate_benchmark(
-                dataset, os.path.join(predictions_dir, dataset), output_dir, root_dir
+                dataset, os.path.join(
+                    predictions_dir, dataset), output_dir, root_dir
             )
         except Exception as e:
             print(f"Could not evaluate predictions for {dataset}:\n{str(e)}")
@@ -111,6 +112,8 @@ def evaluate_benchmark(
             return ["detection_acc_avg_dom"]
         elif "rxrx1" == dataset_name:
             return ["acc_avg"]
+        elif "scrc" == dataset_name:
+            return ["acc_avg"]
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
 
@@ -152,7 +155,8 @@ def evaluate_benchmark(
                     wilds_dataset, split, predicted_labels
                 )
             for metric in metrics:
-                replicates_results[split][metric].append(metric_results[metric])
+                replicates_results[split][metric].append(
+                    metric_results[metric])
 
     aggregated_results: Dict[str, Dict[str, float]] = dict()
 
@@ -164,7 +168,8 @@ def evaluate_benchmark(
             aggregated_results[split][f"{metric}_std"] = np.std(
                 replicates_metric_values, ddof=1
             )
-            aggregated_results[split][metric] = np.mean(replicates_metric_values)
+            aggregated_results[split][metric] = np.mean(
+                replicates_metric_values)
 
     # Write out aggregated results to output file
     print(f"Writing aggregated results for {dataset_name} to {output_dir}...")
@@ -224,7 +229,8 @@ def get_predictions(path: str) -> torch.Tensor:
         data = file.readlines()
         file.close()
 
-    predicted_labels = [literal_eval(line.rstrip()) for line in data if line.rstrip()]
+    predicted_labels = [literal_eval(line.rstrip())
+                        for line in data if line.rstrip()]
     return torch.from_numpy(np.array(predicted_labels))
 
 
@@ -246,7 +252,8 @@ def main():
         )
     else:
         print("A dataset was not specified. Evaluating for all WILDS datasets...")
-        evaluate_all_benchmarks(args.predictions_dir, args.output_dir, args.root_dir)
+        evaluate_all_benchmarks(args.predictions_dir,
+                                args.output_dir, args.root_dir)
     print("\nDone.")
 
 

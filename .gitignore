@@ -4,4 +4,4 @@ dist
 venv
 wilds.egg-info
 
-logs/
+logs*/

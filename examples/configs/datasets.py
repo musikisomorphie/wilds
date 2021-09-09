@@ -104,7 +104,8 @@ dataset_defaults = {
         'split_scheme': 'official',
         'model': 'unet-seq',
         'model_kwargs': {'n_channels_in': 5},
-        'loader_kwargs': {'num_workers': 1}, # pybigwig seems to have trouble with multiprocessing
+        # pybigwig seems to have trouble with multiprocessing
+        'loader_kwargs': {'num_workers': 1},
         'train_transform': None,
         'eval_transform': None,
         'loss_function': 'multitask_bce',
@@ -113,7 +114,7 @@ dataset_defaults = {
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
         'scheduler': 'MultiStepLR',
-        'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1},
+        'scheduler_kwargs': {'milestones': [3, 6], 'gamma': 0.1},
         'batch_size': 128,
         'lr': 1e-3,
         'weight_decay': 1e-4,
@@ -125,7 +126,7 @@ dataset_defaults = {
     },
     'fmow': {
         'split_scheme': 'official',
-        'dataset_kwargs': {            
+        'dataset_kwargs': {
             'seed': 111,
             'use_ood_val': True
         },
@@ -133,7 +134,7 @@ dataset_defaults = {
         'model_kwargs': {'pretrained': True},
         'transform': 'image_base',
         'loss_function': 'cross_entropy',
-        'groupby_fields': ['year',],
+        'groupby_fields': ['year', ],
         'val_metric': 'acc_worst_region',
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
@@ -165,7 +166,7 @@ dataset_defaults = {
         'optimizer': 'Adam',
         'split_scheme': 'official',
         'scheduler': None,
-        'groupby_fields': ['location',],
+        'groupby_fields': ['location', ],
         'n_groups_per_batch': 2,
         'irm_lambda': 1.,
         'coral_penalty_weight': 10.,
@@ -175,9 +176,9 @@ dataset_defaults = {
     'ogb-molpcba': {
         'split_scheme': 'official',
         'model': 'gin-virtual',
-        'model_kwargs': {'dropout':0.5}, # include pretrained
+        'model_kwargs': {'dropout': 0.5},  # include pretrained
         'loss_function': 'multitask_bce',
-        'groupby_fields': ['scaffold',],
+        'groupby_fields': ['scaffold', ],
         'val_metric': 'ap',
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
@@ -199,12 +200,12 @@ dataset_defaults = {
         'val_metric': 'acc',
         'val_metric_decreasing': False,
         'optimizer': 'AdamW',
-        'optimizer_kwargs': {'eps':1e-8},
+        'optimizer_kwargs': {'eps': 1e-8},
         'lr': 8e-5,
         'weight_decay': 0.,
         'n_epochs': 3,
         'batch_size': 6,
-        'groupby_fields': ['repo',],
+        'groupby_fields': ['repo', ],
         'n_groups_per_batch': 2,
         'irm_lambda': 1.,
         'coral_penalty_weight': 1.,
@@ -223,13 +224,13 @@ dataset_defaults = {
         'model_kwargs': {'num_channels': 8},
         'transform': 'poverty',
         'loss_function': 'mse',
-        'groupby_fields': ['country',],
+        'groupby_fields': ['country', ],
         'val_metric': 'r_wg',
         'val_metric_decreasing': False,
         'algo_log_metric': 'mse',
         'optimizer': 'Adam',
         'scheduler': 'StepLR',
-        'scheduler_kwargs': {'gamma':0.96},
+        'scheduler_kwargs': {'gamma': 0.96},
         'batch_size': 64,
         'lr': 0.001,
         'weight_decay': 0.0,
@@ -251,7 +252,7 @@ dataset_defaults = {
         'val_metric_decreasing': False,
         'algo_log_metric': 'accuracy',
         'optimizer': 'SGD',
-        'optimizer_kwargs': {'momentum':0.9},
+        'optimizer_kwargs': {'momentum': 0.9},
         'scheduler': None,
         'batch_size': 128,
         'lr': 1e-5,
@@ -328,7 +329,7 @@ dataset_defaults = {
         'groupby_fields': ['session'],
         'val_metric': 'detection_acc_avg_dom',
         'val_metric_decreasing': False,
-        'algo_log_metric': None, # TODO
+        'algo_log_metric': None,  # TODO
         'optimizer': 'Adam',
         'optimizer_kwargs': {},
         'scheduler': None,
@@ -341,6 +342,31 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': None,
+    },
+    'scrc': {
+        'split_scheme': '201',
+        'dataset_kwargs': {'img_chn': [1, 2, 3]},
+        'model': 'resnet50',
+        'model_kwargs': {'pretrained': True},
+        'transform': 'scrc',
+        'target_resolution': (256, 256),
+        'loss_function': 'cross_entropy',
+        'groupby_fields': ['y'],
+        'val_metric': 'acc_avg',
+        'val_metric_decreasing': False,
+        'algo_log_metric': 'accuracy',
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': 'cosine_schedule_with_warmup',
+        'scheduler_kwargs': {'num_warmup_steps': 5415},
+        'batch_size': 64,
+        'lr': 1e-3,
+        'weight_decay': 1e-5,
+        'n_groups_per_batch': 4,
+        'coral_penalty_weight': 0.1,
+        'irm_lambda': 1.0,
+        'n_epochs': 100,
+        'process_outputs_function': 'multiclass_logits_to_pred',
     }
 }
 
@@ -349,24 +375,24 @@ dataset_defaults = {
 ##########################################
 
 amazon_split_defaults = {
-    'official':{
+    'official': {
         'groupby_fields': ['user'],
         'val_metric': '10th_percentile_acc',
         'val_metric_decreasing': False,
         'no_group_logging': True,
     },
-    'user':{
+    'user': {
         'groupby_fields': ['user'],
         'val_metric': '10th_percentile_acc',
         'val_metric_decreasing': False,
         'no_group_logging': True,
     },
-    'time':{
+    'time': {
         'groupby_fields': ['year'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
     },
-    'time_baseline':{
+    'time_baseline': {
         'groupby_fields': ['year'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
@@ -377,13 +403,13 @@ user_baseline_splits = [
     'A1CNQTCRQ35IMM_baseline', 'A1NE43T0OM6NNX_baseline', 'A1UH21GLZTYYR5_baseline', 'A20EEWWSFMZ1PN_baseline',
     'A219Y76LD1VP4N_baseline', 'A37BRR2L8PX3R2_baseline', 'A3JVZY05VLMYEM_baseline', 'A9Q28YTLYREO7_baseline',
     'ASVY5XSYJ1XOE_baseline', 'AV6QDP8Q0ONK4_baseline'
-    ]
+]
 for split in user_baseline_splits:
     amazon_split_defaults[split] = {
         'groupby_fields': ['user'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
-        }
+    }
 
 category_splits = [
     'arts_crafts_and_sewing_generalization', 'automotive_generalization',
@@ -396,36 +422,36 @@ category_splits = [
     'patio_lawn_and_garden_generalization', 'pet_supplies_generalization', 'prime_pantry_generalization',
     'sports_and_outdoors_generalization', 'tools_and_home_improvement_generalization', 'toys_and_games_generalization',
     'video_games_generalization',
-    ]
+]
 for split in category_splits:
     amazon_split_defaults[split] = {
         'groupby_fields': ['category'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
-        }
+    }
 
 ########################################
 ### Split-specific defaults for Yelp ###
 ########################################
 
 yelp_split_defaults = {
-    'official':{
+    'official': {
         'groupby_fields': ['year'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
     },
-    'user':{
+    'user': {
         'groupby_fields': ['user'],
         'val_metric': '10th_percentile_acc',
         'val_metric_decreasing': False,
         'no_group_logging': True,
     },
-    'time':{
+    'time': {
         'groupby_fields': ['year'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
     },
-    'time_baseline':{
+    'time_baseline': {
         'groupby_fields': ['year'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,

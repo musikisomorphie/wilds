@@ -12,27 +12,25 @@ from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import Accuracy
 
 
-class RxRx1Dataset(WILDSDataset):
+class SCRCDataset(WILDSDataset):
     """
-    The RxRx1-WILDS dataset.
-    This is a modified version of the original RxRx1 dataset.
+    The SCRC-WILDS dataset.
+    This is a modified version of the original scrc dataset.
 
     Supported `split_scheme`:
         - 'official'
-        - 'mixed-to-test'
 
     Input (x):
-        3-channel fluorescent microscopy images of cells
+        3-channel tma spots
+        1-channel cellular annotation (optional)
 
     Label (y):
-        y is one of 1,139 classes:
-        - 0 to 1107: treatment siRNAs
-        - 1108 to 1137: positive control siRNAs
-        - 1138: negative control siRNA
+        y is cms class label (0-3):
 
     Metadata:
-        Each image is annotated with its experiment, plate, well, and site, as
-        well as with the id of the siRNA the cells were perturbed with.
+        Each image is annotated with its tma_id (the index of the tma spot in the whole *.pt file), 
+        tma_reg (tumor front 0, micro 1, center 2),
+        patient id.
 
     Website:
         https://www.rxrx.ai/rxrx1
@@ -61,8 +59,13 @@ class RxRx1Dataset(WILDSDataset):
             'compressed_size': None}
     }
 
-    def __init__(self, version=None, root_dir='data', download=False,
-                 split_scheme='012'):
+    def __init__(self,
+                 version=None,
+                 root_dir='data',
+                 download=False,
+                 split_scheme='201',
+                 img_chn=[0, 1, 2, 3]
+                 ):
 
         self._version = version
         self._split_scheme = split_scheme
@@ -71,124 +74,50 @@ class RxRx1Dataset(WILDSDataset):
                 f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._data_dir = Path(self.initialize_data_dir(root_dir, download))
+        self._data_dir = Path(root_dir)
 
         # Load splits
-        df = pd.read_csv(self._data_dir / 'metadata.csv')
+        df = pd.read_csv(self._data_dir /
+                         'scrc_wilds_{}.csv'.format(self._split_scheme))
 
-        # Splits
-        if split_scheme == 'official':
-            # Training:   33 experiments, 1 site per experiment (site 1)
-            # Validation: 4 experiments, 2 sites per experiment
-            # Test OOD:   14 experiments, 2 sites per experiment
-            # Test ID:    Same 33 experiments from training set
-            #             1 site per experiment (site 2)
-            self._split_dict = {
-                'train': 0,
-                'val': 1,
-                'test': 2,
-                'id_test': 3
-            }
-            self._split_names = {
-                'train': 'Train',
-                'val': 'Validation (OOD)',
-                'test': 'Test (OOD)',
-                'id_test': 'Test (ID)'
-            }
-            self._split_array = df.dataset.apply(self._split_dict.get).values
-            # id_test set
-            mask = ((df.dataset == 'train') & (df.site == 2)).values
-            self._split_array[mask] = self.split_dict['id_test']
+        self.imgs = torch.load(str(self._data_dir / 'scrc_wilds_img.pt'))
+        self.imgs = self.imgs[:, img_chn].float().div(256.)
 
-        elif split_scheme == 'mixed-to-test':
-            # Training:   33 experiments total, 1 site per experiment (site 1)
-            #             = 19 experiments from the orig training set (site 1)
-            #             + 14 experiments from the orig test set (site 1)
-            # Validation: same as official split
-            # Test:       14 experiments from the orig test set,
-            #             1 site per experiment (site 2)
-            self._split_dict = {
-                'train': 0,
-                'val': 1,
-                'test': 2
-            }
-            self._split_names = {
-                'train': 'Train',
-                'val': 'Validation',
-                'test': 'Test'
-            }
-            self._split_array = df.dataset.apply(self._split_dict.get).values
-            # Use half of the training set (site 1) and discard site 2
-            mask_to_discard = ((df.dataset == 'train') & (df.site == 2)).values
-            self._split_array[mask_to_discard] = -1
-            # Take all site 1 in the test set and move it to train
-            mask_to_move = ((df.dataset == 'test') & (df.site == 1)).values
-            self._split_array[mask_to_move] = self._split_dict['train']
-            # For each of the test experiments, remove a train experiment of the same cell type
-            test_cell_type_counts = defaultdict(int)
-            test_experiments = df.loc[(
-                df['dataset'] == 'test'), 'experiment'].unique()
-            for test_experiment in test_experiments:
-                test_cell_type = test_experiment.split('-')[0]
-                test_cell_type_counts[test_cell_type] += 1
-            # Training experiments are numbered starting from 1 and left-padded with 0s
-            experiments_to_discard = [
-                f'{cell_type}-{num:02}'
-                for cell_type, count in test_cell_type_counts.items()
-                for num in range(1, count+1)]
-            # Sanity check
-            train_experiments = df.loc[(
-                df['dataset'] == 'train'), 'experiment'].unique()
-            for experiment in experiments_to_discard:
-                assert experiment in train_experiments
-                mask_to_discard = (df.experiment == experiment).values
-                self._split_array[mask_to_discard] = -1
-        else:
-            raise ValueError(
-                f'Split scheme {self._split_scheme} not recognized')
+        # Training:   the tma spots related to the 'xx' tumor region
+        #             embedded in 'xxz' of split_scheme
+        # Validation: the tma spots realted to the 'z' of 'xxz'
+        #             randomly sampled 2 tma spots/patient
+        # Test:       the rest of tma spots related to the 'z' of 'xxz'
+        self._split_dict = {
+            'train': 0,
+            'val': 1,
+            'test': 2
+        }
+        self._split_names = {
+            'train': 'Train',
+            'val': 'Validation',
+            'test': 'Test'
+        }
 
-        # Filenames
-        def create_filepath(row):
-            filepath = os.path.join('images',
-                                    row.experiment,
-                                    f'Plate{row.plate}',
-                                    f'{row.well}_s{row.site}.png')
-            return filepath
-        self._input_array = df.apply(create_filepath, axis=1).values
-
+        self._split_array = df.dataset.apply(self._split_dict.get).values
+        self._input_array = df['tma_id'].values
         # Labels
-        self._y_array = torch.tensor(df['sirna_id'].values)
-        self._n_classes = max(df['sirna_id']) + 1
+        self._y_array = torch.tensor(df['cms'].values)
+        self._n_classes = max(df['cms']) + 1
         self._y_size = 1
-        assert len(np.unique(df['sirna_id'])) == self._n_classes
-
-        # Convert experiment and well from strings to idxs
-        indexed_metadata = {}
-        self._metadata_map = {}
-        for key in ['cell_type', 'experiment', 'well']:
-            all_values = list(df[key].unique())
-            value_to_idx_map = {value: idx for idx,
-                                value in enumerate(all_values)}
-            value_idxs = [value_to_idx_map[value]
-                          for value in df[key].tolist()]
-            self._metadata_map[key] = all_values
-            indexed_metadata[key] = value_idxs
+        assert len(np.unique(df['cms'])) == self._n_classes
 
         self._metadata_array = torch.tensor(
-            np.stack([indexed_metadata['cell_type'],
-                      indexed_metadata['experiment'],
-                      df['plate'].values,
-                      indexed_metadata['well'],
-                      df['site'].values,
+            np.stack([df['tma_reg'].values,
+                      df['pat_id'].values,
                       self.y_array], axis=1)
         )
-        self._metadata_fields = ['cell_type',
-                                 'experiment', 'plate', 'well', 'site', 'y']
+        self._metadata_fields = ['tma_reg', 'pat_id', 'y']
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=(['cell_type'])
+            groupby_fields=(['y'])
         )
 
         super().__init__(root_dir, download, split_scheme)
@@ -221,6 +150,5 @@ class RxRx1Dataset(WILDSDataset):
             - x (Tensor): Input features of the idx-th data point
         """
         # All images are in the train folder
-        img_path = self.data_dir / self._input_array[idx]
-        img = Image.open(img_path)
+        img = self.imgs[self._input_array[idx]]
         return img

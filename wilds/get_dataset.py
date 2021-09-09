@@ -1,5 +1,6 @@
 import wilds
 
+
 def get_dataset(dataset, version=None, **dataset_kwargs):
     """
     Returns the appropriate WILDS dataset class.
@@ -15,7 +16,8 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         version = str(version)
 
     if dataset not in wilds.supported_datasets:
-        raise ValueError(f'The dataset {dataset} is not recognized. Must be one of {wilds.supported_datasets}.')
+        raise ValueError(
+            f'The dataset {dataset} is not recognized. Must be one of {wilds.supported_datasets}.')
 
     if dataset == 'amazon':
         from wilds.datasets.amazon_dataset import AmazonDataset
@@ -89,3 +91,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'globalwheat':
         from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
         return GlobalWheatDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'scrc':
+        from wilds.datasets.scrc_dataset import SCRCDataset
+        return SCRCDataset(version=version, **dataset_kwargs)

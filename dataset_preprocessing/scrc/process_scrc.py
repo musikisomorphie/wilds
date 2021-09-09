@@ -18,8 +18,23 @@ def process_scrc(root_dir, val_pat=2, treg=3):
     for reg in range(treg):
         scrc_pt = root_dir / 'scrc_symm_circle_{}.pt'.format(reg)
         img, lab = torch.load(str(scrc_pt))
+        # this axis shift makes left_pad easier
+        # for normflow computation
+        # because of downscale the rgb value is rather a float 254.242 than 254.0
+        # lead to minor diff when call byte()
+        img = img[:, [4, 0, 1, 2]].byte()
+        # remove mucin (5) and misc (3) cell annotation
+        # times the label with 10 for the division by 256
+        _ncl = img[:, 0]
+        _ncl_idx = (_ncl == 3) | (_ncl == 5)
+        _ncl[_ncl_idx] = 0
+        img[:, 0] = _ncl * 10
+        print(torch.unique(img[:,0]))
+
+        lab = lab.float()
+
         # save float tensor instead of double tensor
-        imgs.append(img.float())
+        imgs.append(img)
         labs.append(lab)
         lens.append(img.shape[0])
         tma_reg += [reg] * img.shape[0]
@@ -27,7 +42,7 @@ def process_scrc(root_dir, val_pat=2, treg=3):
         # save float tensor for normalizing flow
         scrc_out_pt = str(root_dir / 'scrc_wilds_{}.pt'.format(reg))
         with open(scrc_out_pt, 'wb') as f:
-            torch.save((img.float(), lab), f)
+            torch.save((img, lab), f)
             print('save {} done'.format(scrc_out_pt))
 
     imgs = torch.cat(imgs)
@@ -56,7 +71,7 @@ def process_scrc(root_dir, val_pat=2, treg=3):
     cms = labs[:, -4:]
     cms = torch.argmax(cms, dim=1)
     scrc_dict['cms'] = cms.numpy().tolist()
-    scrc_dict['pat_id'] = labs[:, 0].long().numpy().tolist()
+    scrc_dict['pat_id'] = labs[:, 0].int().numpy().tolist()
 
     for reg in range(treg):
         scrc_dict['dataset'] = np.asarray(['train'] * imgs.shape[0])
