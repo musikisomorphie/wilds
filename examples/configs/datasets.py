@@ -345,9 +345,9 @@ dataset_defaults = {
     },
     'scrc': {
         'split_scheme': '201',
-        'dataset_kwargs': {'img_chn': [1, 2, 3]},
+        'dataset_kwargs': {'img_chn': [0, 1, 2, 3]},
         'model': 'resnet50',
-        'model_kwargs': {'pretrained': True},
+        'model_kwargs': {'img_chn': 4, 'pretrained': True},
         'transform': 'scrc',
         'target_resolution': (256, 256),
         'loss_function': 'cross_entropy',

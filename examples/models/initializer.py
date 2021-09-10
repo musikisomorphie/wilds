@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from models.layers import Identity
 
+
 def initialize_model(config, d_out, is_featurizer=False):
     """
     Initializes models according to the config
@@ -34,7 +35,8 @@ def initialize_model(config, d_out, is_featurizer=False):
 
     elif 'bert' in config.model:
         if is_featurizer:
-            featurizer = initialize_bert_based_model(config, d_out, is_featurizer)
+            featurizer = initialize_bert_based_model(
+                config, d_out, is_featurizer)
             classifier = nn.Linear(featurizer.d_out, d_out)
             model = (featurizer, classifier)
         else:
@@ -86,8 +88,9 @@ def initialize_model(config, d_out, is_featurizer=False):
             model = UNet(num_tasks=d_out, **config.model_kwargs)
 
     elif config.model == 'fasterrcnn':
-        if is_featurizer: # TODO
-            raise NotImplementedError('Featurizer not implemented for detection yet')
+        if is_featurizer:  # TODO
+            raise NotImplementedError(
+                'Featurizer not implemented for detection yet')
         else:
             model = initialize_fasterrcnn_model(config, d_out)
         model.needs_y = True
@@ -117,7 +120,8 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
 
     if config.model == 'bert-base-uncased':
         if is_featurizer:
-            model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+            model = BertFeaturizer.from_pretrained(
+                config.model, **config.model_kwargs)
         else:
             model = BertClassifier.from_pretrained(
                 config.model,
@@ -125,7 +129,8 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
                 **config.model_kwargs)
     elif config.model == 'distilbert-base-uncased':
         if is_featurizer:
-            model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+            model = DistilBertFeaturizer.from_pretrained(
+                config.model, **config.model_kwargs)
         else:
             model = DistilBertClassifier.from_pretrained(
                 config.model,
@@ -134,6 +139,7 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
+
 
 def initialize_torchvision_model(name, d_out, **kwargs):
     import torchvision
@@ -150,15 +156,20 @@ def initialize_torchvision_model(name, d_out, **kwargs):
         last_layer_name = 'fc'
     else:
         raise ValueError(f'Torchvision model {name} not recognized')
+
+    img_chn = kwargs.pop('img_chn', None)
     # construct the default model, which has the default last layer
     constructor = getattr(torchvision.models, constructor_name)
     model = constructor(**kwargs)
+    if img_chn is not None:
+        model.conv1 = nn.Conv2d(img_chn, 64, kernel_size=7, stride=2, padding=3,
+                                bias=False)
     # adjust the last layer
     d_features = getattr(model, last_layer_name).in_features
     if d_out is None:  # want to initialize a featurizer model
         last_layer = Identity(d_features)
         model.d_out = d_features
-    else: # want to initialize a classifier for a particular num_classes
+    else:  # want to initialize a classifier for a particular num_classes
         last_layer = nn.Linear(d_features, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
@@ -176,6 +187,6 @@ def initialize_fasterrcnn_model(config, d_out):
         num_classes=d_out,
         min_size=config.model_kwargs["min_size"],
         max_size=config.model_kwargs["max_size"]
-        )
+    )
 
     return model
