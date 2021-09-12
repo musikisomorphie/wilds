@@ -28,8 +28,8 @@ def process_scrc(root_dir, val_pat=2, treg=3):
         _ncl = img[:, 0]
         _ncl_idx = (_ncl == 3) | (_ncl == 5)
         _ncl[_ncl_idx] = 0
-        img[:, 0] = _ncl * 10
-        print(torch.unique(img[:,0]))
+        _ncl[_ncl == 4] = 3
+        print(torch.unique(img[:, 0]))
 
         lab = lab.float()
 

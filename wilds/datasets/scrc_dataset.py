@@ -64,8 +64,7 @@ class SCRCDataset(WILDSDataset):
                  root_dir='data',
                  download=False,
                  split_scheme='201',
-                 img_chn=[0, 1, 2, 3]
-                 ):
+                 img_chn=[0, 1, 2, 3]):
 
         self._version = version
         self._split_scheme = split_scheme
@@ -81,8 +80,12 @@ class SCRCDataset(WILDSDataset):
                          'scrc_wilds_{}.csv'.format(self._split_scheme))
 
         self.imgs = torch.load(str(self._data_dir / 'scrc_wilds_img.pt'))
-        self.imgs = self.imgs[:, img_chn].float().div(256.)
-
+        self.imgs = self.imgs.float()
+        # 3 informative classes stroma, epith, infl + 1 background
+        self.imgs[:, 0] = self.imgs[:, 0].div(4.)
+        # rgb pixel divided by 256
+        self.imgs[:, 1:] = self.imgs[:, 1:].div(256.)
+        self.imgs = self.imgs[:, img_chn]
         # Training:   the tma spots related to the 'xx' tumor region
         #             embedded in 'xxz' of split_scheme
         # Validation: the tma spots realted to the 'z' of 'xxz'

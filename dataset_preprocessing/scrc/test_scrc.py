@@ -25,7 +25,9 @@ class test_scrc(unittest.TestCase):
         imgs_path = scrc_dir / 'scrc_wilds_img.pt'
         imgs = torch.load(str(imgs_path))
         imgs = imgs[:, [1, 2, 3, 0]]
-        imgs[:, -1] = imgs[:, -1] / 10
+        ncls = imgs[:, -1]
+        ncls[ncls == 3] = 4
+        imgs[:, -1] = ncls
         labs_path = scrc_dir / 'scrc_wilds_lab.pt'
         labs = torch.load(str(labs_path))
         lens = [0]
