@@ -36,6 +36,7 @@ class test_scrc(unittest.TestCase):
             img, lab = torch.load(str(pt_path))
             # because of downscale the rgb value is rather a float 254.242 than 254.0
             # lead to minor diff when call byte()
+            img[:, :3] = torch.clamp(img[:, :3], 0, 255)
             img = img[:, [0, 1, 2, 4]].byte()
             ncls = img[:, -1]
             ncls[(ncls == 3) | (ncls == 5)] = 0

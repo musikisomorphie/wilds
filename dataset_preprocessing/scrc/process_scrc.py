@@ -22,6 +22,7 @@ def process_scrc(root_dir, val_pat=2, treg=3):
         # for normflow computation
         # because of downscale the rgb value is rather a float 254.242 than 254.0
         # lead to minor diff when call byte()
+        img[:, :3] = torch.clamp(img[:, :3], 0, 255)
         img = img[:, [4, 0, 1, 2]].byte()
         # remove mucin (5) and misc (3) cell annotation
         # times the label with 10 for the division by 256
