@@ -77,9 +77,9 @@ class SCRCDataset(WILDSDataset):
 
         # Load splits
         df = pd.read_csv(self._data_dir /
-                         'scrc_wilds_{}.csv'.format(self._split_scheme))
+                         'scrc_{}_wilds.csv'.format(self._split_scheme))
 
-        self.imgs = torch.load(str(self._data_dir / 'scrc_wilds_img.pt'))
+        self.imgs = torch.load(str(self._data_dir / 'scrc_imgs_wilds.pt'))
         self.imgs = self.imgs.float()
         # 3 informative classes stroma, epith, infl + 1 background
         self.imgs[:, 0] = self.imgs[:, 0].div(4.)
