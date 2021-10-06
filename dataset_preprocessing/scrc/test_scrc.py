@@ -30,7 +30,7 @@ class test_visual_scrc:
         tma_dict = dict()
         for pat, tma_info in halo_dict.items():
             for tma in tma_info:
-                tma_dict[tma] = (int(pat), tma["ImageActualTif"])
+                tma_dict[tma] = (int(pat), tma_info[tma]["ImageActualTif"])
 
         cnt = 0
         meta_path = new_dir / 'metadata012.csv'
