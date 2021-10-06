@@ -38,7 +38,7 @@ class test_visual_scrc:
         meta = pd.read_csv(str(meta_path))
         for _, row in meta.iterrows():
             img_path = new_dir / 'images' / \
-                row['tma_reg'] / '{}_1.png'.format(row['tma_id'])
+                str(row['tma_reg']) / '{}_1.png'.format(row['tma_id'])
             img = Image.open(str(img_path))
             img = np.asarray(img.convert('RGB'))
 
