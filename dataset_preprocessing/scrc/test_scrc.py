@@ -30,13 +30,15 @@ class test_visual_scrc:
         tma_dict = dict()
         for pat, tma_info in halo_dict.items():
             for tma in tma_info:
-                tma_dict[tma] = (int(pat), tma_info[tma]["ImageActualTif"])
+                if "ImageActualTif" in tma_info[tma]:
+                    tma_dict[tma] = (int(pat), tma_info[tma]["ImageActualTif"])
 
         cnt = 0
         meta_path = new_dir / 'metadata012.csv'
         meta = pd.read_csv(str(meta_path))
         for _, row in meta.iterrows():
-            img_path = new_dir / 'images' / row['tma_reg'] / '{}_1.png'.format(row['tma_id'])
+            img_path = new_dir / 'images' / \
+                row['tma_reg'] / '{}_1.png'.format(row['tma_id'])
             img = Image.open(str(img_path))
             img = np.asarray(img.convert('RGB'))
 
@@ -52,7 +54,8 @@ class test_visual_scrc:
             cnt += 1
             if cnt >= img_num:
                 break
-        
+
+
 class test_scrc(unittest.TestCase):
     def __init__(self, old_dir, new_dir, val_pat=2):
         super().__init__()
@@ -168,7 +171,7 @@ class test_scrc(unittest.TestCase):
                 cms_single = [float(row['imCMS{}'.format(i)])
                               for i in range(1, 5)]
                 raw_cms_dict[t_reg][tma_id].append(cms_single)
-        
+
         # print(raw_pat_dict)
         for t_reg, tma in raw_cms_dict.items():
             for t in tma:
@@ -183,16 +186,17 @@ class test_scrc(unittest.TestCase):
 
         with open(str(new_dir / 'clinical_data_wilds.json'), 'r') as jfile:
             meta_new = json.load(jfile)
-        
-        cms_cnt = {0: [0, 0, 0, 0], 
-                   1: [0, 0, 0, 0], 
+
+        cms_cnt = {0: [0, 0, 0, 0],
+                   1: [0, 0, 0, 0],
                    2: [0, 0, 0, 0]}
         for t_reg, pat in raw_pat_dict.items():
             for p in pat:
                 p_info = meta_new[str(p)]
                 cms_sum = np.sum(np.asarray(pat[p]), axis=0)
                 for i in range(4):
-                    self.assertAlmostEqual(float(p_info['imCMS{}'.format(i + 1)][t_reg]), float(cms_sum[i]), places=13)
+                    self.assertAlmostEqual(
+                        float(p_info['imCMS{}'.format(i + 1)][t_reg]), float(cms_sum[i]), places=13)
                 cms_cnt[t_reg][np.argmax(cms_sum)] += 1
         print(cms_cnt)
 
@@ -203,13 +207,13 @@ class test_scrc(unittest.TestCase):
                     pat = prob[:-1] if prob[-1].isalpha() else prob
                 else:
                     pat = self.prob_id[prob]
-                
-                cms_sum = np.sum(np.asarray(raw_pat_dict[t_reg][int(pat)]), axis=0)
+
+                cms_sum = np.sum(np.asarray(
+                    raw_pat_dict[t_reg][int(pat)]), axis=0)
                 if np.argmax(cms_sum) != meta_dict[t][0]:
                     print(pat, cms_sum, np.argmax(cms_sum), meta_dict[t][0])
                 # self.assertTrue(np.argmax(cms_sum) == meta_dict[t][0])
 
-                
     def test_wilds(self, new_dir):
         for i in (new_dir / 'scrc_v1.0' / 'images').glob('*'):
             if i.is_dir():
