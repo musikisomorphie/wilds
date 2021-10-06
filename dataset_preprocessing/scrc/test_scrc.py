@@ -37,6 +37,7 @@ class test_visual_scrc:
         meta_path = new_dir / 'metadata012.csv'
         meta = pd.read_csv(str(meta_path))
         for _, row in meta.iterrows():
+            print(cnt)
             img_path = new_dir / 'images' / \
                 str(row['tma_reg']) / '{}_1.png'.format(row['tma_id'])
             img = Image.open(str(img_path))
