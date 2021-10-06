@@ -48,7 +48,7 @@ class test_visual_scrc:
 
             img_cat = np.concatenate([img, img_raw], axis=1)
             img = Image.fromarray(img_cat, mode='RGB')
-            img.save(new_dir / 'test_tmp' / '{}.jpg'.format(tma_id))
+            img.save(str(new_dir / 'test_tmp' / '{}.jpg'.format(tma_id)))
             cnt += 1
             if cnt >= img_num:
                 break
