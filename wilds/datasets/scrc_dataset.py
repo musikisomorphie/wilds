@@ -62,9 +62,8 @@ class SCRCDataset(WILDSDataset):
     def __init__(self,
                  version=None,
                  root_dir='data',
-                 download=False,
-                 split_scheme='201',
-                 img_chn=[0, 1, 2, 3]):
+                 download=True,
+                 split_scheme='012'):
 
         self._version = version
         self._split_scheme = split_scheme
@@ -73,19 +72,12 @@ class SCRCDataset(WILDSDataset):
                 f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._data_dir = Path(root_dir)
+        self._data_dir = Path(root_dir) / 'scrc_v1.0'
 
         # Load splits
         df = pd.read_csv(self._data_dir /
-                         'scrc_{}_wilds.csv'.format(self._split_scheme))
+                         'metadata{}.csv'.format(self._split_scheme))
 
-        self.imgs = torch.load(str(self._data_dir / 'scrc_imgs_wilds.pt'))
-        self.imgs = self.imgs.float()
-        # 3 informative classes stroma, epith, infl + 1 background
-        self.imgs[:, 0] = self.imgs[:, 0].div(4.)
-        # rgb pixel divided by 256
-        self.imgs[:, 1:] = self.imgs[:, 1:].div(256.)
-        self.imgs = self.imgs[:, img_chn]
         # Training:   the tma spots related to the 'xx' tumor region
         #             embedded in 'xxz' of split_scheme
         # Validation: the tma spots realted to the 'z' of 'xxz'
@@ -103,7 +95,16 @@ class SCRCDataset(WILDSDataset):
         }
 
         self._split_array = df.dataset.apply(self._split_dict.get).values
-        self._input_array = df['tma_id'].values
+        # Filenames
+        def create_filepath(row):
+            # here we start with rgb image
+            # later process *_2.png cellular info
+            filepath = os.path.join('images',
+                                    str(row.tma_reg),
+                                    '{}_1.png'.format(row.tma_id))
+            return filepath
+        self._input_array = df.apply(create_filepath, axis=1).values
+
         # Labels
         self._y_array = torch.tensor(df['cms'].values)
         self._n_classes = max(df['cms']) + 1
@@ -153,5 +154,6 @@ class SCRCDataset(WILDSDataset):
             - x (Tensor): Input features of the idx-th data point
         """
         # All images are in the train folder
-        img = self.imgs[self._input_array[idx]]
+        img_path = self.data_dir / self._input_array[idx]
+        img = Image.open(img_path)
         return img

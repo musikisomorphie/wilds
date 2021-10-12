@@ -1,0 +1,1 @@
+sudo docker run -it -v /home/histopath/Github/wilds/:/root/wilds -v /home/histopath/Data/:/root/Data  -v /home/histopath/.cache/torch/hub/checkpoints:/root/.cache/torch/hub/checkpoints/  --shm-size 8G --gpus all  restyle

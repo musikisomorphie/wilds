@@ -161,6 +161,13 @@ def initialize_rxrx1_transform(is_training):
 
 
 def initialize_scrc_transform(is_training):
+    def standardize(x: torch.Tensor) -> torch.Tensor:
+        mean = x.mean(dim=(1, 2))
+        std = x.std(dim=(1, 2))
+        std[std == 0.] = 1.
+        return TF.normalize(x, mean, std)
+    t_standardize = transforms.Lambda(lambda x: standardize(x))
+
     angles = [0, 90, 180, 270]
 
     def random_rotation(x: torch.Tensor) -> torch.Tensor:
@@ -174,8 +181,13 @@ def initialize_scrc_transform(is_training):
         transforms_ls = [
             t_random_rotation,
             transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            t_standardize,
         ]
-        transform = transforms.Compose(transforms_ls)
-        return transform
     else:
-        return None
+        transforms_ls = [
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    transform = transforms.Compose(transforms_ls)
+    return transform
