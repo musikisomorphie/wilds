@@ -67,7 +67,8 @@ class RxRx1Dataset(WILDSDataset):
         self._version = version
         self._split_scheme = split_scheme
         if self._split_scheme not in ['official', 'mixed-to-test']:
-            raise ValueError(f'Split scheme {self._split_scheme} not recognized')
+            raise ValueError(
+                f'Split scheme {self._split_scheme} not recognized')
 
         # path
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
@@ -125,7 +126,8 @@ class RxRx1Dataset(WILDSDataset):
             self._split_array[mask_to_move] = self._split_dict['train']
             # For each of the test experiments, remove a train experiment of the same cell type
             test_cell_type_counts = defaultdict(int)
-            test_experiments = df.loc[(df['dataset'] == 'test'), 'experiment'].unique()
+            test_experiments = df.loc[(df['dataset'] == 'test'),
+                                      'experiment'].unique()
             for test_experiment in test_experiments:
                 test_cell_type = test_experiment.split('-')[0]
                 test_cell_type_counts[test_cell_type] += 1
@@ -135,13 +137,15 @@ class RxRx1Dataset(WILDSDataset):
                 for cell_type, count in test_cell_type_counts.items()
                 for num in range(1, count+1)]
             # Sanity check
-            train_experiments = df.loc[(df['dataset'] == 'train'), 'experiment'].unique()
+            train_experiments = df.loc[(df['dataset'] == 'train'),
+                                       'experiment'].unique()
             for experiment in experiments_to_discard:
                 assert experiment in train_experiments
                 mask_to_discard = (df.experiment == experiment).values
                 self._split_array[mask_to_discard] = -1
         else:
-            raise ValueError(f'Split scheme {self._split_scheme} not recognized')
+            raise ValueError(
+                f'Split scheme {self._split_scheme} not recognized')
 
         # Filenames
         def create_filepath(row):
@@ -163,8 +167,10 @@ class RxRx1Dataset(WILDSDataset):
         self._metadata_map = {}
         for key in ['cell_type', 'experiment', 'well']:
             all_values = list(df[key].unique())
-            value_to_idx_map = {value: idx for idx, value in enumerate(all_values)}
-            value_idxs = [value_to_idx_map[value] for value in df[key].tolist()]
+            value_to_idx_map = {value: idx for idx,
+                                value in enumerate(all_values)}
+            value_idxs = [value_to_idx_map[value]
+                          for value in df[key].tolist()]
             self._metadata_map[key] = all_values
             indexed_metadata[key] = value_idxs
 
@@ -176,7 +182,12 @@ class RxRx1Dataset(WILDSDataset):
                       df['site'].values,
                       self.y_array], axis=1)
         )
-        self._metadata_fields = ['cell_type', 'experiment', 'plate', 'well', 'site', 'y']
+        self._metadata_fields = ['cell_type',
+                                 'experiment',
+                                 'plate',
+                                 'well',
+                                 'site',
+                                 'y']
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
