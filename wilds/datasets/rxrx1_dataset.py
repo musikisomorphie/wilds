@@ -75,6 +75,7 @@ class RxRx1Dataset(WILDSDataset):
 
         # Load splits
         df = pd.read_csv(self._data_dir / 'metadata.csv')
+        # df = df.loc[df['cell_type'] == 'U2OS']
 
         # Splits
         if split_scheme == 'official':
@@ -225,6 +226,14 @@ class RxRx1Dataset(WILDSDataset):
             - x (Tensor): Input features of the idx-th data point
         """
         # All images are in the train folder
-        img_path = self.data_dir / self._input_array[idx]
-        img = Image.open(img_path)
-        return img
+        rgb_path = self.data_dir / self._input_array[idx]
+        rgb = Image.open(rgb_path).convert('RGB')
+        rgb_np = np.asarray(rgb, dtype=np.uint8)
+
+        msk_path = str(rgb_path).replace('.png', '_msk.png')
+        msk = Image.open(msk_path).convert('L')
+        msk_np = np.asarray(msk, dtype=np.uint8)
+        msk_np = np.expand_dims(msk_np, axis=-1)
+
+        img_pil = Image.fromarray(np.concatenate((rgb_np, msk_np), axis=-1))
+        return img_pil
