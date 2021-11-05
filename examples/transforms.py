@@ -182,12 +182,12 @@ def initialize_scrc_transform(is_training):
             t_random_rotation,
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            t_standardize,
+            # t_standardize,
         ]
     else:
         transforms_ls = [
             transforms.ToTensor(),
-            t_standardize,
+            # t_standardize,
         ]
     transform = transforms.Compose(transforms_ls)
     return transform

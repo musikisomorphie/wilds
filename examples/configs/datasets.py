@@ -296,7 +296,7 @@ dataset_defaults = {
     'rxrx1': {
         'split_scheme': 'official',
         'model': 'resnet50',
-        'model_kwargs': {'pretrained': True},
+        'model_kwargs': {'img_chn': 4, 'pretrained': True},
         'transform': 'rxrx1',
         'target_resolution': (256, 256),
         'loss_function': 'cross_entropy',
@@ -346,7 +346,7 @@ dataset_defaults = {
     'scrc': {
         'split_scheme': '201',
         'model': 'resnet50',
-        'model_kwargs': {'img_chn': 3, 'pretrained': True},
+        'model_kwargs': {'img_chn': 4, 'pretrained': True},
         'transform': 'scrc',
         'target_resolution': (256, 256),
         'loss_function': 'cross_entropy',

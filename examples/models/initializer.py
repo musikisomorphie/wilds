@@ -32,7 +32,32 @@ def initialize_model(config, d_out, is_featurizer=False):
                 name=config.model,
                 d_out=d_out,
                 **config.model_kwargs)
-
+    elif 'efficient' in config.model:
+        if is_featurizer:
+            featurizer = initialize_eff_model(
+                name=config.model,
+                d_out=None,
+                **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_eff_model(
+                name=config.model,
+                d_out=d_out,
+                **config.model_kwargs)
+    elif 'vit' in config.model:
+        if is_featurizer:
+            featurizer = initialize_vit_model(
+                name=config.model,
+                d_out=None,
+                **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_vit_model(
+                name=config.model,
+                d_out=d_out,
+                **config.model_kwargs)
     elif 'bert' in config.model:
         if is_featurizer:
             featurizer = initialize_bert_based_model(
@@ -157,11 +182,14 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     else:
         raise ValueError(f'Torchvision model {name} not recognized')
 
-    img_chn = kwargs.pop('img_chn', None)
+    img_chn = kwargs.pop('img_chn', 3)
     # construct the default model, which has the default last layer
     constructor = getattr(torchvision.models, constructor_name)
     model = constructor(**kwargs)
-    if img_chn is not None:
+    if 'dense' in name:
+        model.features.conv0 = nn.Conv2d(img_chn, 64, kernel_size=7, stride=2, padding=3,
+                                         bias=False)
+    else:
         model.conv1 = nn.Conv2d(img_chn, 64, kernel_size=7, stride=2, padding=3,
                                 bias=False)
     # adjust the last layer
@@ -188,5 +216,49 @@ def initialize_fasterrcnn_model(config, d_out):
         min_size=config.model_kwargs["min_size"],
         max_size=config.model_kwargs["max_size"]
     )
+
+    return model
+
+
+def initialize_eff_model(name, d_out, **kwargs):
+    from efficientnet_pytorch import EfficientNet
+
+    img_chn = kwargs.pop('img_chn', 3)
+    if d_out is None:
+        model = EfficientNet.from_name(name,
+                                       in_channels=img_chn)
+        model.d_out = model._fc.in_features
+        model._fc = Identity(model._fc.in_features)
+    else:
+        model = EfficientNet.from_name(name,
+                                       in_channels=img_chn,
+                                       num_classes=d_out)
+        model.d_out = d_out
+
+    return model
+
+
+def initialize_vit_model(name, d_out, feat_dim=768, **kwargs):
+    from vit_pytorch import ViT
+
+    img_chn = kwargs.pop('img_chn', 3)
+    # use ViT-base setting
+    # see https://openreview.net/pdf?id=YicbFdNTTy
+    model = ViT(channels=img_chn,
+                image_size=256,
+                patch_size=16,
+                num_classes=1 if d_out is None else d_out,
+                dim=feat_dim,
+                depth=12,
+                heads=12,
+                mlp_dim=3072,
+                dropout=0.1,
+                emb_dropout=0.1)
+
+    if d_out is None:
+        model.d_out = feat_dim
+        model.mlp_head = Identity(feat_dim)
+    else:
+        model.d_out = d_out
 
     return model

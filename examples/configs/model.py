@@ -16,31 +16,31 @@ model_defaults = {
     },
     'densenet121': {
         'model_kwargs': {
-            'pretrained':True,
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },
     'wideresnet50': {
         'model_kwargs': {
-            'pretrained':True,
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },
     'resnet18': {
-        'model_kwargs':{
-            'pretrained':True,
+        'model_kwargs': {
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },
     'resnet34': {
-        'model_kwargs':{
-            'pretrained':True,
+        'model_kwargs': {
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },
     'resnet50': {
         'model_kwargs': {
-            'pretrained':True,
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },
@@ -56,8 +56,23 @@ model_defaults = {
         'model_kwargs': {
             'pretrained_model': True,
             'pretrained_backbone': True,
-            'min_size' :1024,
-            'max_size' :1024
+            'min_size': 1024,
+            'max_size': 1024
         }
-    }
+    },
+    'efficientnet-b0': {
+        'model_kwargs': {
+            'pretrained': True,
+        }
+    },
+    'efficientnet-b8': {
+        'model_kwargs': {
+            'pretrained': True,
+        }
+    },
+    'vit': {
+        'model_kwargs': {
+            'pretrained': False,
+        }
+    },
 }
