@@ -19,7 +19,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             If is_featurizer=False:
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
     """
-    if config.model in ('resnet50', 'resnet34', 'resnet18', 'wideresnet50', 'densenet121'):
+    if config.model in ('resnet50', 'resnet34', 'resnet18', 'wideresnet50', 'densenet121', 'mobilenet_v2'):
         if is_featurizer:
             featurizer = initialize_torchvision_model(
                 name=config.model,
@@ -179,6 +179,9 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     elif name in ('resnet50', 'resnet34', 'resnet18'):
         constructor_name = name
         last_layer_name = 'fc'
+    elif name == 'mobilenet_v2':
+        constructor_name = name
+        last_layer_name = 'classifier'
     else:
         raise ValueError(f'Torchvision model {name} not recognized')
 
@@ -189,11 +192,17 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     if 'dense' in name:
         model.features.conv0 = nn.Conv2d(img_chn, 64, kernel_size=7, stride=2, padding=3,
                                          bias=False)
+    elif 'mobilenet' in name:
+        model.features[0][0] = nn.Conv2d(img_chn, 32, kernel_size=3, stride=2, padding=1,
+                                         bias=False)
     else:
         model.conv1 = nn.Conv2d(img_chn, 64, kernel_size=7, stride=2, padding=3,
                                 bias=False)
     # adjust the last layer
-    d_features = getattr(model, last_layer_name).in_features
+    if 'mobilenet' in name:
+        d_features = getattr(model, last_layer_name)[1].in_features
+    else:
+        d_features = getattr(model, last_layer_name).in_features
     if d_out is None:  # want to initialize a featurizer model
         last_layer = Identity(d_features)
         model.d_out = d_features

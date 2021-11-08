@@ -24,7 +24,7 @@ transforms = ['bert', 'image_base',
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'resnet18', 'wideresnet50',
           'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
           'gin-virtual', 'logistic_regression', 'code-gpt-py',
-          'fasterrcnn', 'unet-seq', 'efficientnet-b0', 'efficientnet-b8', 'vit']
+          'fasterrcnn', 'unet-seq', 'efficientnet-b0', 'efficientnet-b8', 'vit', 'mobilenet_v2']
 
 # See algorithms/initializer.py
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']

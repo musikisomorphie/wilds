@@ -32,7 +32,7 @@ def compute_stat(root_dir, method, data):
     for phs in phase:
         res[phs] = dict.fromkeys(subtyp, None)
         for exp in exps:    
-            print(exp)
+            # print(exp)
             df = pd.read_csv(exp / '{}_eval.csv'.format(phs))
             idx = np.argmax(df['acc_avg'])
             # this is necessary, avoid list copy by reference
@@ -51,7 +51,11 @@ def compute_stat(root_dir, method, data):
                 if res[phs][sub] is None:
                     res[phs][sub] = list()
                 res[phs][sub].append(sub_acc)
-    print(res)
+    print(res['val']['total'])
+    print(res['test']['total'])
+    if 'id_test' in res:
+        print(res['id_test']['total'])
+    print('done!')
 
 
 if __name__ == '__main__':
@@ -60,4 +64,6 @@ if __name__ == '__main__':
                         type=pathlib.Path,
                         required=True)
     args = parser.parse_args()
-    compute_stat(args.root_dir, 'ERM', 'scrc_012')
+    exps = ['scrc_012', 'scrc_120', 'scrc_201', 'rxrx1']
+    for exp in exps:
+        compute_stat(args.root_dir, 'ERM', exp)

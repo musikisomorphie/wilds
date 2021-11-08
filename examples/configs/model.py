@@ -75,4 +75,9 @@ model_defaults = {
             'pretrained': False,
         }
     },
+    'mobilenet_v2': {
+        'model_kwargs': {
+            'pretrained': True,
+        }
+    }
 }
