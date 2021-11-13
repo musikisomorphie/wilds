@@ -79,5 +79,10 @@ model_defaults = {
         'model_kwargs': {
             'pretrained': True,
         }
+    },
+    'mnasnet1_0': {
+        'model_kwargs': {
+            'pretrained': True,
+        }
     }
 }
